@@ -44,11 +44,11 @@ int main() {
     cout << "Enter time quantum (for high-priority queue): ";
     cin >> tq;
 
-    vector<Process> p(n); // This vector holds all processes
+    vector<Process> p(n); 
 
-    // We will store the *index* of the process in the queues
-    queue<int> q1; // q1 = High-Priority (Round Robin)
-    queue<int> q2; // q2 = Low-Priority (FCFS)
+    
+    queue<int> q1; 
+    queue<int> q2; 
 
     for (int i = 0; i < n; i++) {
         int id, at, bt, priority;
@@ -57,106 +57,100 @@ int main() {
         p[i].id = id;
         p[i].at = at;
         p[i].bt = bt;
-        p[i].rt = bt; // Initialize remaining time
+        p[i].rt = bt;
         p[i].priority = priority;
     }
 
     
     sortByArrivalTime(p);
 
-    int curProcInd = 0; // The index of the *next* process to arrive
-    int time = 0;       // The main simulation clock
-    int done = 0;       // Counter for completed processes
+    int curProcInd = 0; 
+    int time = 0;       
+    int done = 0;      
 
     cout << "\nExecution Sequence: ";
 
   
     while (done < n) {
 
-        // 1. Add any newly arrived processes to the correct priority queue
+       
         while (curProcInd < n && p[curProcInd].at <= time) {
             if (p[curProcInd].priority == 1) {
-                q1.push(curProcInd); // Push the *index*
+                q1.push(curProcInd); 
             } else {
-                q2.push(curProcInd); // Push the *index*
+                q2.push(curProcInd); 
             }
             curProcInd++;
         }
 
-        // --- SCHEDULER LOGIC ---
-
-        // 2. --- HIGH-PRIORITY QUEUE (Round Robin) ---
-        // Always check q1 first (fixed-priority).
+        
         if (!q1.empty()) {
-            int i = q1.front(); // Get index of process to run
+            int i = q1.front(); 
             q1.pop();
 
-            // Run for one quantum or its remaining time, whichever is smaller
+            
             int burst = min(p[i].rt, tq);
             time += burst;
             p[i].rt -= burst;
 
-            cout << "P" << p[i].id; // Print the process that just ran
+            cout << "P" << p[i].id;
 
-            // 3. Add any processes that arrived *during* this burst
+            
             while (curProcInd < n && p[curProcInd].at <= time) {
                  if (p[curProcInd].priority == 1) q1.push(curProcInd);
                  else q2.push(curProcInd);
                  curProcInd++;
             }
             
-            // 4. Handle the process that just ran
+            
             if (p[i].rt > 0) {
-                // Not finished, add it back to the end of its queue
+                
                 q1.push(i);
             } else {
-                // Finished
+               
                 p[i].completed(time);
                 done++;
             }
             if (done < n) cout << " -> ";
         }
 
-        // 3. --- LOW-PRIORITY QUEUE (FCFS) ---
-        // This *only* runs if the high-priority queue (q1) is EMPTY.
+        
         else if (!q2.empty()) {
-            int i = q2.front(); // Get index of process to run
+            int i = q2.front(); 
             q2.pop();
             
-            // This is FCFS, so it runs for its *entire* remaining time
+           
             int burst = p[i].rt;
             
-            // If CPU was idle, jump time to this process's arrival
             if (time < p[i].at) {
                 time = p[i].at;
             }
             
             time += burst;
-            p[i].rt = 0; // It's now finished
+            p[i].rt = 0; 
 
-            cout << "P" << p[i].id; // Print the process that just ran
+            cout << "P" << p[i].id; 
 
-            // This process is now complete
+
             p[i].completed(time);
             done++;
             
             if (done < n) cout << " -> ";
         }
 
-        // 4. --- CPU IDLE ---
-        // If both queues are empty but we're not done, CPU is idle.
+    
         else {
-            // Jump time to the next process arrival
+            
             if (curProcInd < n) {
                 time = p[curProcInd].at;
             } else {
-                // Should not happen if done < n, but as a safeguard
+               
                 time++;
             }
         }
     }
 
-    // --- FINAL RESULTS ---
+
     cout << endl;
     cout << "--------------------------------" << endl;
     cout << setw(5) << "ID";
